@@ -16,10 +16,20 @@ pipeline {
             steps {
                 sh '''
                 docker network create app-network || true
+
                 docker rm -f backend1 backend2 || true
 
                 docker run -d --name backend1 --network app-network backend-app
                 docker run -d --name backend2 --network app-network backend-app
+                '''
+            }
+        }
+
+        stage('Build NGINX Image') {
+            steps {
+                sh '''
+                docker rmi -f nginx-lb || true
+                docker build -t nginx-lb nginx
                 '''
             }
         }
@@ -33,9 +43,7 @@ pipeline {
                   --name nginx-lb \
                   --network app-network \
                   -p 80:80 \
-                  nginx
-
-                docker cp nginx/default.conf nginx-lb:/etc/nginx/conf.d/default.conf
+                  nginx-lb
                 '''
             }
         }
